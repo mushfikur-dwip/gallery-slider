@@ -34,7 +34,7 @@ class WCGS_Public_Acf {
 	 *
 	 * @param int    $post_id Post ID.
 	 * @param string $field_name ACF field name.
-	 * @return array Array of image IDs or empty array.
+	 * @return array Array of image IDs.
 	 */
 	public static function get_gallery_images( $post_id, $field_name = 'car_gallery' ) {
 		if ( ! self::is_acf_active() ) {
@@ -47,7 +47,20 @@ class WCGS_Public_Acf {
 			return array();
 		}
 
-		return $acf_images;
+		// Extract image IDs from ACF gallery field.
+		// ACF can return either Image Array or Image ID based on return format.
+		$image_ids = array();
+		foreach ( $acf_images as $image ) {
+			if ( is_array( $image ) && isset( $image['ID'] ) ) {
+				// Image Array format.
+				$image_ids[] = $image['ID'];
+			} elseif ( is_numeric( $image ) ) {
+				// Image ID format.
+				$image_ids[] = $image;
+			}
+		}
+
+		return $image_ids;
 	}
 
 	/**

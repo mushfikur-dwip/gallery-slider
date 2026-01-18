@@ -203,16 +203,27 @@ class WCGS_Public_Helper {
 		$sized_thumb    = wp_get_attachment_image_src( $image_id, $thumb_size );
 		$sized_image    = wp_get_attachment_image_src( $image_id, $image_size );
 		$video_url      = get_post_meta( $image_id, 'wcgs_video', true );
-		if ( ! empty( $image_url ) ) {
+		
+		// Fallback to full size if sized image not available.
+		if ( empty( $sized_image ) || empty( $sized_image[0] ) ) {
+			$sized_image = $image_full_src;
+		}
+		
+		// Fallback to full size for thumbnail if not available.
+		if ( empty( $sized_thumb ) || empty( $sized_thumb[0] ) ) {
+			$sized_thumb = $image_full_src;
+		}
+		
+		if ( ! empty( $image_url ) && ! empty( $sized_image ) ) {
 				$result = array(
 					'url'         => $sized_image[0],
 					'full_url'    => $image_url,
-					'thumb_url'   => ! empty( $sized_thumb[0] ) && $sized_thumb[0] ? $sized_thumb[0] : '',
+					'thumb_url'   => ! empty( $sized_thumb[0] ) && $sized_thumb[0] ? $sized_thumb[0] : $image_url,
 					'cap'         => isset( $image_caption ) && ! empty( $image_caption ) ? esc_attr( $image_caption ) : '',
-					'thumbWidth'  => $sized_thumb[1],
-					'thumbHeight' => $sized_thumb[2],
-					'imageWidth'  => $sized_image[1],
-					'imageHeight' => $sized_image[2],
+					'thumbWidth'  => isset( $sized_thumb[1] ) ? $sized_thumb[1] : 100,
+					'thumbHeight' => isset( $sized_thumb[2] ) ? $sized_thumb[2] : 100,
+					'imageWidth'  => isset( $sized_image[1] ) ? $sized_image[1] : 600,
+					'imageHeight' => isset( $sized_image[2] ) ? $sized_image[2] : 600,
 					'alt_text'    => $image_alt,
 					'id'          => $image_id,
 				);
@@ -224,5 +235,7 @@ class WCGS_Public_Helper {
 
 				return $result;
 		}
+		
+		return null;
 	}
 }

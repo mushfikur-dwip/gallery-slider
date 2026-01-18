@@ -106,15 +106,20 @@ if ( ! class_exists( 'WCGS_Product_Gallery' ) ) {
 		 * @return void
 		 */
 		private function assigns_layout() {
-			$assigned_layout = $this->helper->get_assigns_layout( $this->product );
-			// Apply first matching layout.
-			if ( ! empty( $assigned_layout ) ) {
-				$this->apply_assigned_layout( $assigned_layout[0] );
-			}
+		// Only apply assigned layouts for WooCommerce products.
+		if ( ! $this->product ) {
+			return;
 		}
+		
+		$assigned_layout = $this->helper->get_assigns_layout( $this->product );
+		// Apply first matching layout.
+		if ( ! empty( $assigned_layout ) ) {
+			$this->apply_assigned_layout( $assigned_layout[0] );
+		}
+	}
 
-		/**
-		 * Apply the assigned layout settings.
+	/**
+	 * Apply the assigned layout settings.
 		 *
 		 * @param int $layout_id Layout post ID.
 		 */
@@ -182,8 +187,11 @@ if ( ! class_exists( 'WCGS_Product_Gallery' ) ) {
 		 *
 		 * @return array
 		 */
-		private function get_default_variation() {
-			$default_attrs = $this->product->get_default_attributes();
+		private function get_default_variation() {		// Return empty array if not a WooCommerce product.
+		if ( ! $this->product ) {
+			return array();
+		}
+					$default_attrs = $this->product->get_default_attributes();
 			$slug_attr     = apply_filters( 'sp_woo_gallery_slider_use_slug_attr', true );
 			if ( $slug_attr ) {
 				$selected_attrs = $this->get_selected_attributes();
@@ -200,8 +208,11 @@ if ( ! class_exists( 'WCGS_Product_Gallery' ) ) {
 		 *
 		 * @return array
 		 */
-		private function get_selected_attributes() {
-			$selected   = array();
+		private function get_selected_attributes() {		// Return empty array if not a WooCommerce product.
+		if ( ! $this->product ) {
+			return array();
+		}
+					$selected   = array();
 			$attributes = $this->product->get_attributes();
 			foreach ( $attributes as $attribute_name => $options ) {
 				$key = 'attribute_' . sanitize_title( $attribute_name );
@@ -445,14 +456,14 @@ if ( ! class_exists( 'WCGS_Product_Gallery' ) ) {
 			return;
 		}
 
-		$acf_images = WCGS_Public_Acf::get_gallery_images( $this->product_id, $field_name );
+		$image_ids = WCGS_Public_Acf::get_gallery_images( $this->product_id, $field_name );
 
-		if ( empty( $acf_images ) ) {
+		if ( empty( $image_ids ) ) {
 			return;
 		}
 
-		foreach ( $acf_images as $image ) {
-			$image_id = isset( $image['ID'] ) ? $image['ID'] : $image;
+		// Process each image ID.
+		foreach ( $image_ids as $image_id ) {
 			if ( $this->validate_image_id( $image_id ) ) {
 				$this->gallery[] = $this->helper->wcgs_image_meta( $image_id, $this->settings );
 			}

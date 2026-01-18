@@ -1,10 +1,4 @@
 <?php
-/**
- * Advanced Debug for Car Gallery
- * 
- * এটা temporarily use করো exact problem খুঁজে বের করার জন্য
- */
-
 // Add to functions.php
 function advanced_car_gallery_debug() {
     if (!is_singular('car')) {
@@ -141,12 +135,77 @@ function advanced_car_gallery_debug() {
 			echo '<li style="color: green;">✅ ' . $style . ' (enqueued)</li>';
 		} elseif ($registered) {
 			echo '<li style="color: orange;">⚠️ ' . $style . ' (registered but not enqueued)</li>';
-    echo '</ul>';
+		} else {
+			echo '<li style="color: red;">❌ ' . $style . ' (NOT loaded)</li>';
+		}
+	}
+	echo '</ul>';
     
-    // Check 6: Check if gallery HTML is in page
-    echo '<h3>6️⃣ Gallery HTML Check:</h3>';
-    echo '<p>Look for <code>#wpgs-gallery</code> element in page source</p>';
-    echo '<p>If you see it, gallery is rendering. If images are broken, it\'s a data problem.</p>';
+    // Check 6: Featured Image
+    echo '<h3>6️⃣ Featured Image Check:</h3>';
+    $featured_id = get_post_thumbnail_id($post_id);
+    if ($featured_id) {
+        echo '<p style="color: green;">✅ Featured Image ID: ' . $featured_id . '</p>';
+        $featured_url = wp_get_attachment_url($featured_id);
+        if ($featured_url) {
+            echo '<p>Featured Image URL: ' . esc_url($featured_url) . '</p>';
+            echo '<img src="' . esc_url($featured_url) . '" style="max-width: 200px; border: 2px solid blue;" />';
+        }
+    } else {
+        echo '<p style="color: red;">❌ No featured image set</p>';
+    }
+    
+    // Check 6.5: Actual Gallery Build Test
+    echo '<h3>6.5️⃣ Gallery Build Test:</h3>';
+    if (class_exists('WCGS_Product_Gallery')) {
+        $test_gallery = new WCGS_Product_Gallery($post_id);
+        $built_gallery = $test_gallery->build_gallery();
+        
+        if (!empty($built_gallery)) {
+            echo '<p style="color: green;">✅ Gallery has ' . count($built_gallery) . ' images</p>';
+            echo '<p><strong>Gallery Image IDs:</strong> ';
+            $gallery_ids = array();
+            foreach ($built_gallery as $img_data) {
+                if (isset($img_data['id'])) {
+                    $gallery_ids[] = $img_data['id'];
+                }
+            }
+            echo implode(', ', $gallery_ids) . '</p>';
+            
+            // Check if featured is in gallery
+            if (in_array($featured_id, $gallery_ids)) {
+                echo '<p style="color: green;">✅ Featured image (ID ' . $featured_id . ') IS in gallery</p>';
+            } else {
+                echo '<p style="color: red;">❌ Featured image (ID ' . $featured_id . ') NOT in gallery!</p>';
+            }
+        } else {
+            echo '<p style="color: red;">❌ Gallery is empty!</p>';
+            
+            // Manual test: Try to build ACF gallery manually
+            echo '<p><strong>Manual ACF Gallery Test:</strong></p>';
+            if (class_exists('WCGS_Public_Helper') && !empty($ids)) {
+                $test_helper = new WCGS_Public_Helper();
+                $test_settings = get_option('wcgs_settings', array());
+                
+                echo '<p>Testing wcgs_image_meta for each ACF image:</p><ul>';
+                foreach ($ids as $test_img_id) {
+                    $test_meta = $test_helper->wcgs_image_meta($test_img_id, $test_settings);
+                    if ($test_meta) {
+                        echo '<li style="color: green;">ID ' . $test_img_id . ': ✅ Meta generated</li>';
+                    } else {
+                        echo '<li style="color: red;">ID ' . $test_img_id . ': ❌ Meta is NULL</li>';
+                    }
+                }
+                echo '</ul>';
+            }
+        }
+    }
+    
+    // Check 7: Gallery HTML is in page
+    echo '<h3>7️⃣ Gallery HTML Check:</h3>';
+    echo '<p>Look for <code>#wpgs-gallery</code> element in page source (Right-click → View Page Source)</p>';
+    echo '<p>Search for "wcgs-slider-image-tag" to find gallery images in HTML</p>';
+    echo '<p>If found but not visible, check CSS. If not found, gallery is not rendering.</p>';
     
     echo '</div>';
 }

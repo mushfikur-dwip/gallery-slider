@@ -456,14 +456,24 @@ if ( ! class_exists( 'WCGS_Product_Gallery' ) ) {
 			return;
 		}
 
+		// Add featured image first (like WooCommerce products).
+		$featured_image_id = get_post_thumbnail_id( $this->product_id );
+		if ( $this->validate_image_id( $featured_image_id ) ) {
+			$this->gallery[] = $this->helper->wcgs_image_meta( $featured_image_id, $this->settings );
+		}
+
 		$image_ids = WCGS_Public_Acf::get_gallery_images( $this->product_id, $field_name );
 
 		if ( empty( $image_ids ) ) {
 			return;
 		}
 
-		// Process each image ID.
+		// Process each ACF gallery image (skip if it's the same as featured image).
 		foreach ( $image_ids as $image_id ) {
+			// Skip if this is the featured image (already added).
+			if ( $image_id == $featured_image_id ) {
+				continue;
+			}
 			if ( $this->validate_image_id( $image_id ) ) {
 				$this->gallery[] = $this->helper->wcgs_image_meta( $image_id, $this->settings );
 			}

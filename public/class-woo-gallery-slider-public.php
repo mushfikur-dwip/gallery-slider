@@ -91,6 +91,8 @@ class Woo_Gallery_Slider_Public {
 
 		// Register new shortcode [woogallery] since version 2.2.3.
 		add_shortcode( 'woogallery', array( $this, 'wcgs_woocommerce_show_product_images' ) );
+		// Shortcode for Car gallery: [car_gallery id="123"].
+		add_shortcode( 'car_gallery', array( $this, 'wcgs_woocommerce_show_product_images' ) );
 		// Deprecated shortcode [wcgs_gallery_slider] since version 2.2.3 (use [woogallery] instead).
 		add_shortcode(
 			'wcgs_gallery_slider',
@@ -267,9 +269,25 @@ class Woo_Gallery_Slider_Public {
 	 * WCGS product image area method.
 	 *
 	 * @since 1.0.0
+	 * @param array $atts Shortcode attributes.
+	 * @return string Gallery HTML.
 	 */
-	public function wcgs_woocommerce_show_product_images() {
+	public function wcgs_woocommerce_show_product_images( $atts = array() ) {
+		$atts = shortcode_atts(
+			array(
+				'post_id' => 0,
+				'field'   => 'car_gallery',
+			),
+			$atts
+		);
+
 		ob_start();
+		// Pass post_id to the gallery class via global variable.
+		if ( ! empty( $atts['post_id'] ) ) {
+			global $wcgs_shortcode_post_id, $wcgs_shortcode_field;
+			$wcgs_shortcode_post_id = absint( $atts['post_id'] );
+			$wcgs_shortcode_field   = sanitize_text_field( $atts['field'] );
+		}
 		include WOO_GALLERY_SLIDER_PATH . '/public/partials/product-images.php';
 		return ob_get_clean();
 	}

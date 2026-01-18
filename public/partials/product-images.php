@@ -66,17 +66,25 @@ if ( ! class_exists( 'WCGS_Product_Gallery' ) ) {
 
 		/**
 		 * Constructor
-		 */
-		public function __construct() {
+	 *
+	 * @param int $post_id Optional post ID for shortcode usage.
+	 */
+	public function __construct( $post_id = 0 ) {
+		// Check if post_id is passed from shortcode via global variable.
+		global $wcgs_shortcode_post_id;
+		if ( ! empty( $wcgs_shortcode_post_id ) ) {
+			$post_id = $wcgs_shortcode_post_id;
+		}
+
 		$this->product = $this->get_product();
 		
 		// Support for both WooCommerce products and custom post types.
-		if ( $this->product ) {
+		if ( $this->product && empty( $post_id ) ) {
 			$this->product_id   = $this->product->get_id();
 			$this->product_type = $this->product->get_type();
 		} else {
-			// For custom post types like Car.
-			$this->product_id   = get_the_ID();
+			// For custom post types like Car or shortcode usage.
+			$this->product_id   = ! empty( $post_id ) ? $post_id : get_the_ID();
 			$this->product_type = get_post_type( $this->product_id );
 		}
 		
